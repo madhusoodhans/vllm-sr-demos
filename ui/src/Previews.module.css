@@ -1,0 +1,29 @@
+/* Previews sit on the card's tinted area (--tint, set per tone in DemoCard.module.css). On card hover the pieces settle in turn. */
+.preview { display: grid; height: 100%; place-items: center; }
+.initial { font-family: var(--font-display); font-size: var(--text-4xl); color: var(--tint-ink); }
+
+.receiptScene { display: flex; align-items: center; gap: var(--space-5); }
+.paper { display: grid; gap: 6px; width: 76px; padding: 10px 10px 14px; border-radius: 4px 4px 0 0; background: var(--paper); box-shadow: var(--shadow-resting); transform: rotate(-4deg);
+  /* zigzag torn bottom edge */
+  -webkit-mask: linear-gradient(#000 0 0) top / 100% calc(100% - 6px) no-repeat, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 10px 6px repeat-x;
+  mask: linear-gradient(#000 0 0) top / 100% calc(100% - 6px) no-repeat, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 10px 6px repeat-x; }
+.paperHead { width: 50%; height: 6px; margin: 0 auto 4px; border-radius: 2px; background: var(--paper-ink); }
+.paperLine { height: 3px; border-radius: 2px; background: var(--paper-line); }
+.paperTotal { justify-self: end; width: 40%; height: 5px; margin-top: 4px; border-radius: 2px; background: var(--paper-ink); }
+.checks { display: grid; gap: 6px; padding: 0; list-style: none; }
+.checks li { display: inline-flex; align-items: center; gap: 6px; width: max-content; padding: 3px 9px 3px 6px; border-radius: var(--radius-pill); background: var(--chip); color: var(--foreground); font-size: var(--text-xs); box-shadow: var(--shadow-resting); }
+.checks svg { color: var(--success); }
+
+.chatScene { display: grid; gap: 6px; width: min(240px, 84%); }
+.bubble { max-width: 85%; padding: 5px 10px; border-radius: 12px; font-size: var(--text-xs); line-height: 1.4; box-shadow: var(--shadow-resting); }
+.customer { justify-self: end; border-bottom-right-radius: 4px; background: var(--tint-ink); color: var(--tint-on-ink); }
+.agent { justify-self: start; border-bottom-left-radius: 4px; background: var(--chip); color: var(--foreground); }
+.decision { justify-self: center; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border: 1px dashed var(--tint-ink); border-radius: var(--radius-pill); color: var(--tint-ink); font-size: 11px; }
+
+/* Hover: checks and messages step in once, in order. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  :global(article):hover .checks li, :global(article):hover .chatScene > * { animation: settle var(--duration-considered) var(--ease-enter) both; }
+  :global(article):hover .checks li:nth-child(2), :global(article):hover .chatScene > :nth-child(2) { animation-delay: 90ms; }
+  :global(article):hover .checks li:nth-child(3), :global(article):hover .chatScene > :nth-child(3) { animation-delay: 180ms; }
+}
+@keyframes settle { from { opacity: 0; transform: translateY(4px); } }

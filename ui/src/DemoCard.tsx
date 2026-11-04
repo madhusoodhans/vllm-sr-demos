@@ -1,53 +1,53 @@
-/* One demo: image slot, what it does, which decision model it uses, and a link that opens the demo in the same tab. */
-import type { ComponentType } from "react";
-import { ArrowRight, type LucideProps } from "lucide-react";
+/* One demo card: a tinted preview (or a screenshot from config.json), title, one-line summary, models, and
+ * "Show more" that opens the steps over the preview. The link opens the demo in the same tab, carrying the theme. */
+import { useId, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { ArrowRight, ChevronDown } from "lucide-react";
+import { motionTokens } from "./components/arc/lib/motion-tokens";
+import type { Demo } from "./demos";
+import { Preview } from "./Previews";
 import styles from "./DemoCard.module.css";
 
-export interface DemoCardProps {
-  /** Names the image slot ("receipt" or "returns"); its path comes from config.json (`receiptImage`, `returnsImage`). */
-  slot: string;
-  title: string;
-  summary: string;
-  steps: string[];
-  models: string;
-  /** The demo's URL from config.json; null while the config loads. */
-  href: string | null;
-  /** Screenshot path or URL; empty shows the placeholder illustration. */
-  image: string;
-  action: string;
-  placeholder: ComponentType<LucideProps>[];
-}
-
-export function DemoCard({ slot, title, summary, steps, models, href, image, action, placeholder }: DemoCardProps) {
-  const id = `demo-${slot}`;
+export function DemoCard({ demo, href, image }: { demo: Demo; href: string | null; image: string }) {
+  const [open, setOpen] = useState(false);
+  const reduced = useReducedMotion();
+  const panelId = useId();
+  const titleId = `demo-${demo.id}`;
   return (
-    <article className={styles.card} aria-labelledby={id}>
-      {/* IMAGE SLOT: set "<slot>Image" in config.json (for example "images/receipt.png", next to index.html) to show a screenshot here. */}
-      <div className={styles.media} data-image-slot={slot}>
-        {image ? (
-          <img src={image} alt={`${title} screenshot`} loading="lazy" decoding="async" />
-        ) : (
-          <div className={styles.placeholder} aria-hidden="true">
-            {placeholder.map((Icon, i) => (
-              <span key={i} className={styles.phItem}>
-                {i > 0 && <ArrowRight size={16} strokeWidth={1.75} className={styles.phArrow} />}
-                <span className={styles.phIcon}><Icon size={24} strokeWidth={1.75} /></span>
-              </span>
-            ))}
-          </div>
-        )}
+    <article className={styles.card} aria-labelledby={titleId} data-tone={demo.tone}>
+      {/* IMAGE SLOT: set "<id>Image" in config.json (for example "images/receipt.png", next to index.html) to show a screenshot. */}
+      <div className={styles.media} data-image-slot={demo.id}>
+        {image ? <img src={image} alt={`${demo.title} screenshot`} loading="lazy" decoding="async" /> : <Preview id={demo.id} title={demo.title} />}
       </div>
+      {/* "Show more" opens the steps over the preview and summary (the buttons stay), so the card keeps its size and the page stays one screen. */}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div id={panelId} className={styles.more}
+            initial={reduced ? { opacity: 0 } : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? { opacity: 0 } : { opacity: 0, y: 8 }}
+            transition={reduced ? { duration: 0 } : { y: motionTokens.spring.smooth, opacity: { duration: motionTokens.duration.fast } }}>
+            <ol className={styles.steps}>
+              {demo.steps.map((s) => <li key={s}>{s}</li>)}
+            </ol>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className={styles.body}>
-        <h3 id={id} className={styles.title}>{title}</h3>
-        <p className={styles.summary}>{summary}</p>
-        <ol className={styles.steps}>
-          {steps.map((s) => <li key={s}>{s}</li>)}
-        </ol>
+        <div className={styles.head}>
+          <h3 id={titleId} className={styles.title}>{demo.title}</h3>
+          <ul className={styles.models} aria-label="Decision models">
+            {demo.models.map((m) => <li key={m}>{m}</li>)}
+          </ul>
+        </div>
+        <p className={styles.summary}>{demo.summary}</p>
         <div className={styles.footer}>
-          <span className={styles.models}>{models}</span>
-          {/* target="_top": the same tab; on a Hugging Face Space the page runs in an iframe, and this leaves it for the demo. */}
-          <a className={styles.cta} href={href ?? undefined} target="_top" aria-disabled={href ? undefined : true} data-demo={slot}>
-            {action}<ArrowRight size={16} strokeWidth={1.75} aria-hidden="true" />
+          <button type="button" className={styles.toggle} aria-expanded={open} aria-controls={panelId} onClick={() => setOpen((o) => !o)}>
+            {open ? "Show less" : "Show more"}
+            <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" className={styles.chevron} />
+          </button>
+          {/* target="_top": on a Hugging Face Space the page runs in an iframe, and this leaves it for the demo. */}
+          <a className={styles.cta} href={href ?? undefined} target="_top" aria-disabled={href ? undefined : true} data-demo={demo.id}
+            aria-label={`${demo.action}: ${demo.title}`}>
+            {demo.action}<ArrowRight size={16} strokeWidth={1.75} aria-hidden="true" />
           </a>
         </div>
       </div>

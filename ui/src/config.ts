@@ -1,28 +1,38 @@
-/** Runtime config: config.json next to index.html, read on load, so the demo URLs change without a rebuild.
- *  receiptImage / returnsImage: optional screenshot paths (relative to index.html, or absolute URLs) for the demo cards. */
-export interface SiteConfig { receiptUrl: string; returnsUrl: string; receiptImage: string; returnsImage: string }
+/** Runtime config: config.json next to index.html, read on load, so demo URLs change without a rebuild.
+ *  Each demo in demos.ts reads "<id>Url" (where its card opens) and an optional "<id>Image" (a card screenshot, relative to
+ *  index.html or an absolute URL). apiKeyUrl is where "Get API key" goes. */
+export interface SiteConfig { urls: Record<string, string>; images: Record<string, string>; apiKeyUrl: string }
 
-export const DEFAULTS: SiteConfig = {
-  receiptUrl: "http://localhost:8631",
-  returnsUrl: "http://localhost:8632",
-  receiptImage: "",
-  returnsImage: "",
-};
+const DEFAULT_URLS: Record<string, string> = { receipt: "http://localhost:8631", returns: "http://localhost:8632" };
+export const DEFAULTS: SiteConfig = { urls: DEFAULT_URLS, images: {}, apiKeyUrl: "https://app.vllm-sr.ai/#key" };
 
-const str = (v: unknown, fallback: string) => (typeof v === "string" ? v.trim() : fallback);
+const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 
 export async function loadConfig(): Promise<SiteConfig> {
   try {
     const res = await fetch("./config.json", { cache: "no-store" });
     if (!res.ok) return DEFAULTS;
     const raw = (await res.json()) as Record<string, unknown>;
-    return {
-      receiptUrl: str(raw.receiptUrl, DEFAULTS.receiptUrl) || DEFAULTS.receiptUrl,
-      returnsUrl: str(raw.returnsUrl, DEFAULTS.returnsUrl) || DEFAULTS.returnsUrl,
-      receiptImage: str(raw.receiptImage, ""),
-      returnsImage: str(raw.returnsImage, ""),
-    };
+    const urls: Record<string, string> = { ...DEFAULT_URLS };
+    const images: Record<string, string> = {};
+    for (const [k, v] of Object.entries(raw)) {
+      const m = /^(.+)(Url|Image)$/.exec(k);
+      if (!m || m[1] === "apiKey" || !str(v)) continue;
+      (m[2] === "Url" ? urls : images)[m[1]] = str(v);
+    }
+    return { urls, images, apiKeyUrl: str(raw.apiKeyUrl) || DEFAULTS.apiKeyUrl };
   } catch {
     return DEFAULTS;
+  }
+}
+
+/** The demo's address with the current theme, so the demo (another origin) opens in the same theme. */
+export function withTheme(url: string, theme: string): string {
+  try {
+    const u = new URL(url, location.href);
+    u.searchParams.set("theme", theme);
+    return u.toString();
+  } catch {
+    return url;
   }
 }
