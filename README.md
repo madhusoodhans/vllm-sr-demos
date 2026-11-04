@@ -2,8 +2,12 @@
 
 The page that opens first and leads to two live demos built on vLLM Semantic Router (vllm-sr) and its decision models:
 the receipt validator and the product returns validator. One screen: a dark top bar like the demos', a short summary
-of vllm-sr with the request flow, an API key field (a placeholder, not wired yet) with "Get API key", and one card per
+of vllm-sr with the request flow, an API key field with "Get API key", and one card per
 demo. Each card's "Show more" opens its steps over the card, so the page does not scroll on a desktop screen.
+
+API key: "Open demo" first checks the key field (`ui/src/apiKey.ts`). Empty or wrong, a dialog says so and the demo
+does not open. For now only `1234` passes; `checkKey` will ask the hosted API once keys are wired. The key stays in
+this tab (sessionStorage) so it is still there after "All demos", and it is not sent to the demos yet.
 
 Theme: the cards link to each demo with `?theme=light|dark`, and each demo's "All demos" link comes back the same way,
 so the theme follows the visitor across origins. Each page reads the parameter before first paint, stores it and

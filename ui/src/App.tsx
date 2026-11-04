@@ -1,10 +1,12 @@
 /* The landing page, one screen: a dark top bar like the demos', a short summary of vllm-sr with the request flow,
- * an API key field (not wired yet), and one card per demo from demos.ts.
+ * an API key field that a demo needs before it opens (see apiKey.ts), and one card per demo from demos.ts.
  * Facts here are checked against the Decision API / MoM docs and the vllm-sr Hugging Face model cards (see README.md). */
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import { ArrowUpRight, Brain, Plus, KeyRound, Layers, MessageSquareText, Route, SlidersHorizontal } from "lucide-react";
 import { ThemeSwitch, type Theme } from "./components/arc/theme-switch/theme-switch";
 import { PasswordField } from "./components/arc/password-field/password-field";
+import { Dialog, DialogClose, DialogContent } from "./components/arc/dialog/dialog";
+import { checkKey, loadKey, saveKey, type KeyProblem } from "./apiKey";
 import { DemoCard } from "./DemoCard";
 import { DEMOS } from "./demos";
 import { DEFAULTS, loadConfig, withTheme, type SiteConfig } from "./config";
@@ -42,9 +44,28 @@ const FLOW = [
   { icon: Layers, title: "LLM, when needed", text: "Only what passed reaches it" },
 ];
 
+const KEY_PROBLEMS: Record<KeyProblem, { title: string; text: string }> = {
+  missing: { title: "Add your API key first", text: "The demos run on the hosted vllm-sr models and need a key. Paste yours in the API key field, or get a free one." },
+  invalid: { title: "That API key did not work", text: "Check that you copied the whole key and try again, or get a new one." },
+};
+
 export function App() {
   const [theme, setTheme] = useTheme();
   const config = useConfig();
+  const [apiKey, setApiKey] = useState(loadKey);
+  const [problem, setProblem] = useState<KeyProblem | null>(null);
+  const [lastProblem, setLastProblem] = useState<KeyProblem>("missing");
+  const keyInput = useRef<HTMLInputElement>(null);
+  const keyUrl = config?.apiKeyUrl ?? DEFAULTS.apiKeyUrl;
+
+  /** A demo opens only with a key that passes; otherwise the link is held back and the dialog says why. */
+  const onOpenDemo = (e: MouseEvent<HTMLAnchorElement>) => {
+    const p = checkKey(apiKey);
+    if (!p) return;
+    e.preventDefault();
+    setProblem(p);
+    setLastProblem(p);
+  };
 
   return (
     <div className={styles.shell}>
@@ -88,13 +109,15 @@ export function App() {
               <h2 id="demos-title">Live demos</h2>
               <p className={styles.sub}>Each demo shows every decision as it happens, with the model, time and probabilities.</p>
             </div>
-            {/* API KEY: a placeholder for now. Not stored or sent anywhere until the demos take a visitor's own key. */}
+            {/* API KEY: checked before a demo opens (apiKey.ts) and kept for this tab. Not sent to the demos yet. */}
             <form className={styles.key} onSubmit={(e) => e.preventDefault()}>
               <div className={styles.keyField}>
-                <PasswordField label="Your API key" name="api-key" placeholder="Paste a vllm-sr API key" autoComplete="off" spellCheck={false}
+                <PasswordField ref={keyInput} label="Your API key" name="api-key" placeholder="Paste a vllm-sr API key" autoComplete="off" spellCheck={false}
+                  value={apiKey} aria-invalid={problem ? true : undefined}
+                  onChange={(e) => { setApiKey(e.target.value); saveKey(e.target.value.trim()); setProblem(null); }}
                   messages={{ showPassword: "Show key", hidePassword: "Hide key" }} />
               </div>
-              <a className={styles.keyLink} href={config?.apiKeyUrl ?? DEFAULTS.apiKeyUrl} target="_top">
+              <a className={styles.keyLink} href={keyUrl} target="_top">
                 <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />Get API key<ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" />
               </a>
             </form>
@@ -102,12 +125,24 @@ export function App() {
           <div className={styles.grid}>
             {DEMOS.map((d) => {
               const url = config?.urls[d.id];
-              return <DemoCard key={d.id} demo={d} href={url ? withTheme(url, theme) : null} image={config?.images[d.id] ?? ""} />;
+              return <DemoCard key={d.id} demo={d} href={url ? withTheme(url, theme) : null} image={config?.images[d.id] ?? ""} onOpen={onOpenDemo} />;
             })}
             {DEMOS.length % 3 !== 0 && <div className={cardStyles.soon}><Plus size={18} strokeWidth={1.75} aria-hidden="true" />More demos soon</div>}
           </div>
         </section>
       </main>
+
+      <Dialog open={problem !== null} onOpenChange={(open) => { if (!open) setProblem(null); }}>
+        <DialogContent title={KEY_PROBLEMS[problem ?? lastProblem].title} description={KEY_PROBLEMS[problem ?? lastProblem].text}
+          onCloseAutoFocus={(e) => { e.preventDefault(); keyInput.current?.focus(); }}>
+          <div className={styles.dialogActions}>
+            <a className={styles.keyLink} href={keyUrl} target="_top">
+              <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />Get API key<ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" />
+            </a>
+            <DialogClose className={styles.dialogPrimary}>Enter key</DialogClose>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <footer className={styles.footer}>
         <span>The hosted APIs are free for research and evaluation.</span>
