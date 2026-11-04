@@ -1,9 +1,9 @@
 # vLLM Semantic Router demos: landing page
 
 The page that opens first and leads to two live demos built on vLLM Semantic Router (vllm-sr) and its decision models:
-the receipt validator and the product returns validator. One screen: a dark top bar like the demos', a short summary
-of vllm-sr with the request flow, an API key field with "Get API key", and one card per
-demo, then "Explore more" links to the vllm-sr Spaces, model collections and docs. Each card's "Show more" opens its steps over the card, so the page does not scroll on a desktop screen.
+the receipt validator and the product returns validator. The page scrolls: a dark top bar like the demos', a centred headline and summary of vllm-sr
+with the request flow, a centred API key panel with "Get API key", one card per demo (with "Show more" for its steps),
+then "Explore more" tiles for the vllm-sr Spaces, model collections and docs, and a footer.
 
 API key: "Open demo" first checks the key field (`ui/src/apiKey.ts`). Empty or wrong, a dialog says so and the demo
 does not open. For now only `1234` passes; `checkKey` will ask the hosted API once keys are wired. The key stays in

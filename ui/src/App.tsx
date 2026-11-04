@@ -1,5 +1,5 @@
-/* The landing page, one screen: a dark top bar like the demos', a short summary of vllm-sr with the request flow,
- * an API key field that a demo needs before it opens (see apiKey.ts), and one card per demo from demos.ts.
+/* The landing page: a dark top bar like the demos', a centred summary of vllm-sr with the request flow, the API key
+ * that a demo needs before it opens (see apiKey.ts), one card per demo from demos.ts, and tiles to explore further.
  * Facts here are checked against the Decision API / MoM docs and the vllm-sr Hugging Face model cards (see README.md). */
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import { ArrowUpRight, BookOpen, Brain, ChevronRight, FlaskConical, Sailboat, Scan, ShieldCheck, Sparkles, Plus, KeyRound, Layers, MessageSquareText, Route, SlidersHorizontal } from "lucide-react";
@@ -38,26 +38,25 @@ function useConfig(): SiteConfig | null {
 const SPACES = "https://huggingface.co/spaces/vllm-sr";
 const COLLECTIONS = "https://huggingface.co/collections/vllm-sr";
 
-/** Links under the demos: the vllm-sr Spaces on Hugging Face, then the model collections and docs. */
+/** Tiles under the demos: the vllm-sr Spaces on Hugging Face, then the model collections and docs.
+ *  Descriptions follow each Space's or collection's own Hugging Face summary. */
 const EXPLORE = [
   {
     label: "More demos on Hugging Face",
-    short: "Demos",
     links: [
-      { icon: Sparkles, title: "Decision 3.0", href: `${SPACES}/Decision-3.0` },
-      { icon: Scan, title: "Decision Box", href: `${SPACES}/Decision-Box` },
-      { icon: FlaskConical, title: "Decision Studio", href: `${SPACES}/decision-studio` },
-      { icon: ShieldCheck, title: "Vela 3 Studio", href: `${SPACES}/vela3-studio` },
+      { icon: Sparkles, title: "Decision 3.0", text: "Try the D3 decision models live, on your own text and images.", href: `${SPACES}/Decision-3.0` },
+      { icon: Scan, title: "Decision Box gallery", text: "Find one figure in a crowded painting, live on D3.", href: `${SPACES}/Decision-Box` },
+      { icon: FlaskConical, title: "Decision 2.0 studio", text: "One pass, many decisions, across six Decision 2.0 models.", href: `${SPACES}/decision-studio` },
+      { icon: ShieldCheck, title: "Vela 3.0 studio", text: "Point at it, extract it, check it, with a small encoder on CPU.", href: `${SPACES}/vela3-studio` },
     ],
   },
   {
     label: "Models and docs",
-    short: "Models and docs",
     links: [
-      { icon: Brain, title: "D3 models", href: `${COLLECTIONS}/decision-30-6aca5f47b0d942380f6e4a64` },
-      { icon: Sailboat, title: "Vela models", href: `${COLLECTIONS}/vela-30-6ad1c430eb1718eb4754edcd` },
-      { icon: BookOpen, title: "API docs", href: "https://app.vllm-sr.ai/docs" },
-      { icon: Route, title: "vLLM Semantic Router", href: "https://app.vllm-sr.ai/" },
+      { icon: Brain, title: "D3 models", text: "The Decision 3.0 family on Hugging Face, from edge to ultra.", href: `${COLLECTIONS}/decision-30-6aca5f47b0d942380f6e4a64` },
+      { icon: Sailboat, title: "Vela models", text: "Open routing models, 0.3B to 27B: the router's decisions in one call.", href: `${COLLECTIONS}/vela-30-6ad1c430eb1718eb4754edcd` },
+      { icon: BookOpen, title: "API docs", text: "Requests, question types, keys and limits for the Decision API and MoM.", href: "https://app.vllm-sr.ai/docs" },
+      { icon: Route, title: "vLLM Semantic Router", text: "Get a free key and try the hosted APIs in the browser.", href: "https://app.vllm-sr.ai/" },
     ],
   },
 ];
@@ -108,14 +107,12 @@ export function App() {
 
       <main className={styles.main}>
         <section className={styles.hero} aria-labelledby="title">
-          <div className={styles.intro}>
-            <h1 id="title">Decision models in front of your LLMs</h1>
-            <p className={styles.lead}>
-              vLLM Semantic Router reads every request before an LLM does. Its decision models, D3 and Vela, answer typed
-              questions about the request as probabilities, from one forward pass and no generated text. Your code sets the
-              thresholds, so bad inputs and attacks stop early and only the work that needs a large model reaches one.
-            </p>
-          </div>
+          <h1 id="title">Decision models in front of your LLMs</h1>
+          <p className={styles.lead}>
+            vLLM Semantic Router reads every request before an LLM does. Its decision models, D3 and Vela, answer typed
+            questions about the request as probabilities, from one forward pass and no generated text. Your code sets the
+            thresholds, so bad inputs and attacks stop early and only the work that needs a large model reaches one.
+          </p>
           <div className={styles.flow}>
             <ol className={styles.flowList} aria-label="How a request flows">
             {FLOW.map(({ icon: Icon, title, text }, i) => (
@@ -134,24 +131,26 @@ export function App() {
           </div>
         </section>
 
-        <section className={styles.demos} aria-labelledby="demos-title">
-          <div className={styles.demosHead}>
-            <div className={styles.demosTitle}>
-              <h2 id="demos-title">Live demos</h2>
-              <p className={styles.sub}>Each demo shows every decision as it happens, with the model, time and probabilities.</p>
+        {/* API KEY: checked before a demo opens (apiKey.ts) and kept for this tab. Not sent to the demos yet. */}
+        <section className={styles.keySection} aria-label="API key">
+          <form className={styles.key} onSubmit={(e) => e.preventDefault()}>
+            <div className={styles.keyField}>
+              <PasswordField ref={keyInput} label="Your API key" name="api-key" placeholder="Paste a vllm-sr API key" autoComplete="off" spellCheck={false}
+                value={apiKey} aria-invalid={problem ? true : undefined}
+                onChange={(e) => { setApiKey(e.target.value); saveKey(e.target.value.trim()); setProblem(null); }}
+                messages={{ showPassword: "Show key", hidePassword: "Hide key" }} />
             </div>
-            {/* API KEY: checked before a demo opens (apiKey.ts) and kept for this tab. Not sent to the demos yet. */}
-            <form className={styles.key} onSubmit={(e) => e.preventDefault()}>
-              <div className={styles.keyField}>
-                <PasswordField ref={keyInput} label="Your API key" name="api-key" placeholder="Paste a vllm-sr API key" autoComplete="off" spellCheck={false}
-                  value={apiKey} aria-invalid={problem ? true : undefined}
-                  onChange={(e) => { setApiKey(e.target.value); saveKey(e.target.value.trim()); setProblem(null); }}
-                  messages={{ showPassword: "Show key", hidePassword: "Hide key" }} />
-              </div>
-              <a className={styles.keyLink} href={keyUrl} target="_top" title="Free, for research and evaluation. One key works for the Decision API and MoM.">
-                <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />Get API key<ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" />
-              </a>
-            </form>
+            <a className={styles.keyLink} href={keyUrl} target="_top">
+              <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />Get API key<ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" />
+            </a>
+          </form>
+          <p className={styles.keyNote}>The demos need a key. One free key works for both the Decision API and MoM.</p>
+        </section>
+
+        <section className={styles.section} aria-labelledby="demos-title">
+          <div className={styles.sectionHead}>
+            <h2 id="demos-title">Live demos</h2>
+            <p className={styles.sub}>Each demo shows every decision as it happens, with the model, time and probabilities.</p>
           </div>
           <div className={styles.grid}>
             {DEMOS.map((d) => {
@@ -162,22 +161,34 @@ export function App() {
           </div>
         </section>
 
-        <section className={styles.explore} aria-labelledby="explore-title">
-          <h2 id="explore-title" className={styles.exploreTitle}>Explore more</h2>
+        <section className={styles.section} aria-labelledby="explore-title">
+          <div className={styles.sectionHead}>
+            <h2 id="explore-title">Explore more</h2>
+            <p className={styles.sub}>Other vllm-sr demos on Hugging Face, the models behind them and the docs.</p>
+          </div>
           {EXPLORE.map((g) => (
-            <ul key={g.label} className={styles.chips} aria-label={g.label}>
-              <li className={styles.exploreLabel} aria-hidden="true">{g.short}</li>
-              {g.links.map(({ icon: Icon, title, href }) => (
-                <li key={title}>
-                  <a className={styles.chip} href={href} target="_top">
-                    <Icon size={14} strokeWidth={1.75} aria-hidden="true" />{title}<ArrowUpRight size={12} strokeWidth={1.75} aria-hidden="true" className={styles.chipArrow} />
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <div key={g.label} className={styles.exploreGroup}>
+              <h3 className={styles.groupTitle}>{g.label}</h3>
+              <ul className={styles.tiles}>
+                {g.links.map(({ icon: Icon, title, text, href }) => (
+                  <li key={title}>
+                    <a className={styles.tile} href={href} target="_top">
+                      <span className={styles.tileIcon}><Icon size={18} strokeWidth={1.75} aria-hidden="true" /></span>
+                      <span className={styles.tileTitle}>{title}<ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" className={styles.tileArrow} /></span>
+                      <span className={styles.tileText}>{text}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
         </section>
       </main>
+
+      <footer className={styles.footer}>
+        <span>vLLM Semantic Router demos</span>
+        <span>The hosted APIs are free for research and evaluation.</span>
+      </footer>
 
       <Dialog open={problem !== null} onOpenChange={(open) => { if (!open) setProblem(null); }}>
         <DialogContent title={KEY_PROBLEMS[problem ?? lastProblem].title} description={KEY_PROBLEMS[problem ?? lastProblem].text}

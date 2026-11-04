@@ -15,7 +15,7 @@
 :global([data-theme="dark"]) .card { --tint-on-ink: oklch(20% .02 262); }
 @media (hover: hover) and (pointer: fine) { .card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-resting); } }
 
-.media { height: 128px; border-radius: calc(var(--radius-surface) - 6px); overflow: hidden; background: var(--tint);
+.media { height: 148px; border-radius: calc(var(--radius-surface) - 6px); overflow: hidden; background: var(--tint);
   /* fine dot grid in the tone, as texture for the drawn preview */
   background-image: radial-gradient(color-mix(in oklab, var(--tone) 22%, transparent) 1px, transparent 1.2px); background-size: 14px 14px; }
 .media img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
@@ -49,4 +49,3 @@
 
 /* Where the next demo goes: a quiet dashed slot, same size as a card. */
 .soon { display: grid; place-items: center; align-content: center; gap: var(--space-2); min-height: 100%; padding: var(--space-6); border: 1px dashed var(--border); border-radius: var(--radius-surface); color: var(--text-muted); font-size: var(--text-sm); text-align: center; }
-@media (max-height: 820px) and (min-width: 900px) { .media { height: 96px; } }
