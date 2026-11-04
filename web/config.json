@@ -2,5 +2,6 @@
   "receiptUrl": "http://localhost:8631",
   "returnsUrl": "http://localhost:8632",
   "receiptImage": "",
-  "returnsImage": ""
+  "returnsImage": "",
+  "apiKeyUrl": "https://app.vllm-sr.ai/#key"
 }
