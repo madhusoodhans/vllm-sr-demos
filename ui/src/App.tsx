@@ -2,7 +2,7 @@
  * an API key field that a demo needs before it opens (see apiKey.ts), and one card per demo from demos.ts.
  * Facts here are checked against the Decision API / MoM docs and the vllm-sr Hugging Face model cards (see README.md). */
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
-import { ArrowUpRight, Brain, Plus, KeyRound, Layers, MessageSquareText, Route, SlidersHorizontal } from "lucide-react";
+import { ArrowUpRight, BookOpen, Brain, ChevronRight, FlaskConical, Sailboat, Scan, ShieldCheck, Sparkles, Plus, KeyRound, Layers, MessageSquareText, Route, SlidersHorizontal } from "lucide-react";
 import { ThemeSwitch, type Theme } from "./components/arc/theme-switch/theme-switch";
 import { PasswordField } from "./components/arc/password-field/password-field";
 import { Dialog, DialogClose, DialogContent } from "./components/arc/dialog/dialog";
@@ -35,7 +35,34 @@ function useConfig(): SiteConfig | null {
   return config;
 }
 
-/** The request flow, left to right. A pulse runs along the line and lights each step as it passes. */
+const SPACES = "https://huggingface.co/spaces/vllm-sr";
+const COLLECTIONS = "https://huggingface.co/collections/vllm-sr";
+
+/** Links under the demos: the vllm-sr Spaces on Hugging Face, then the model collections and docs. */
+const EXPLORE = [
+  {
+    label: "More demos on Hugging Face",
+    short: "Demos",
+    links: [
+      { icon: Sparkles, title: "Decision 3.0", href: `${SPACES}/Decision-3.0` },
+      { icon: Scan, title: "Decision Box", href: `${SPACES}/Decision-Box` },
+      { icon: FlaskConical, title: "Decision Studio", href: `${SPACES}/decision-studio` },
+      { icon: ShieldCheck, title: "Vela 3 Studio", href: `${SPACES}/vela3-studio` },
+    ],
+  },
+  {
+    label: "Models and docs",
+    short: "Models and docs",
+    links: [
+      { icon: Brain, title: "D3 models", href: `${COLLECTIONS}/decision-30-6aca5f47b0d942380f6e4a64` },
+      { icon: Sailboat, title: "Vela models", href: `${COLLECTIONS}/vela-30-6ad1c430eb1718eb4754edcd` },
+      { icon: BookOpen, title: "API docs", href: "https://app.vllm-sr.ai/docs" },
+      { icon: Route, title: "vLLM Semantic Router", href: "https://app.vllm-sr.ai/" },
+    ],
+  },
+];
+
+/** The request flow, left to right, with lit chevrons between the steps. */
 const FLOW = [
   { icon: MessageSquareText, title: "Request", text: "Text, an image or a video" },
   { icon: Route, title: "Semantic Router", text: "Reads each request by what it means" },
@@ -90,13 +117,17 @@ export function App() {
             </p>
           </div>
           <div className={styles.flow}>
-            <span className={styles.track} aria-hidden="true"><span className={styles.pulse} /></span>
             <ol className={styles.flowList} aria-label="How a request flows">
             {FLOW.map(({ icon: Icon, title, text }, i) => (
-              <li key={title} className={styles.step} style={{ "--i": i } as CSSProperties}>
+              <li key={title} className={styles.step}>
                 <span className={styles.node}><Icon size={18} strokeWidth={1.75} aria-hidden="true" /></span>
                 <span className={styles.stepTitle}>{title}</span>
                 <span className={styles.stepText}>{text}</span>
+                {i < FLOW.length - 1 && (
+                  <span className={styles.arrows} aria-hidden="true">
+                    {[0, 1, 2].map((k) => <ChevronRight key={k} size={18} strokeWidth={2} style={{ "--k": i * 3 + k } as CSSProperties} />)}
+                  </span>
+                )}
               </li>
             ))}
             </ol>
@@ -117,7 +148,7 @@ export function App() {
                   onChange={(e) => { setApiKey(e.target.value); saveKey(e.target.value.trim()); setProblem(null); }}
                   messages={{ showPassword: "Show key", hidePassword: "Hide key" }} />
               </div>
-              <a className={styles.keyLink} href={keyUrl} target="_top">
+              <a className={styles.keyLink} href={keyUrl} target="_top" title="Free, for research and evaluation. One key works for the Decision API and MoM.">
                 <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />Get API key<ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" />
               </a>
             </form>
@@ -129,6 +160,22 @@ export function App() {
             })}
             {DEMOS.length % 3 !== 0 && <div className={cardStyles.soon}><Plus size={18} strokeWidth={1.75} aria-hidden="true" />More demos soon</div>}
           </div>
+        </section>
+
+        <section className={styles.explore} aria-labelledby="explore-title">
+          <h2 id="explore-title" className={styles.exploreTitle}>Explore more</h2>
+          {EXPLORE.map((g) => (
+            <ul key={g.label} className={styles.chips} aria-label={g.label}>
+              <li className={styles.exploreLabel} aria-hidden="true">{g.short}</li>
+              {g.links.map(({ icon: Icon, title, href }) => (
+                <li key={title}>
+                  <a className={styles.chip} href={href} target="_top">
+                    <Icon size={14} strokeWidth={1.75} aria-hidden="true" />{title}<ArrowUpRight size={12} strokeWidth={1.75} aria-hidden="true" className={styles.chipArrow} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ))}
         </section>
       </main>
 
@@ -144,10 +191,6 @@ export function App() {
         </DialogContent>
       </Dialog>
 
-      <footer className={styles.footer}>
-        <span>The hosted APIs are free for research and evaluation.</span>
-        <span>One key works for the Decision API and MoM.</span>
-      </footer>
     </div>
   );
 }

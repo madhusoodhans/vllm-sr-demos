@@ -49,4 +49,4 @@
 
 /* Where the next demo goes: a quiet dashed slot, same size as a card. */
 .soon { display: grid; place-items: center; align-content: center; gap: var(--space-2); min-height: 100%; padding: var(--space-6); border: 1px dashed var(--border); border-radius: var(--radius-surface); color: var(--text-muted); font-size: var(--text-sm); text-align: center; }
-@media (max-height: 820px) and (min-width: 900px) { .media { height: 108px; } }
+@media (max-height: 820px) and (min-width: 900px) { .media { height: 96px; } }
