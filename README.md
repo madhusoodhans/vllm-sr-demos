@@ -1,5 +1,18 @@
 # vLLM Semantic Router demos: landing page
 
+[![Decision API](https://img.shields.io/badge/Decision%20API-decision.vllm--sr.ai-2563eb)](https://decision.vllm-sr.ai)
+[![MoM](https://img.shields.io/badge/MoM-mom.vllm--sr.ai-0891b2)](https://mom.vllm-sr.ai)
+[![Models on Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Models-vllm--sr-ffd21e)](https://huggingface.co/vllm-sr)
+[![Decision 3.0](https://img.shields.io/badge/%F0%9F%A4%97%20Collection-Decision%203.0-ffd21e)](https://huggingface.co/collections/vllm-sr/decision-30-6aca5f47b0d942380f6e4a64)
+[![Vela 3.0](https://img.shields.io/badge/%F0%9F%A4%97%20Collection-Vela%203.0-ffd21e)](https://huggingface.co/collections/vllm-sr/vela-30-6ad1c430eb1718eb4754edcd)
+
+![React 19](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
+![Static site](https://img.shields.io/badge/deploy-static%20site-555)
+
+![The landing page: summary and request flow, API key, demo cards](docs/landing.png)
+
 The page that opens first and leads to two live demos built on vLLM Semantic Router (vllm-sr) and its decision models:
 the receipt validator and the product returns validator. The page scrolls: a dark top bar like the demos', a centred headline and summary of vllm-sr
 with the request flow, a centred API key panel with "Get API key", one card per demo (with "Show more" for its steps),
