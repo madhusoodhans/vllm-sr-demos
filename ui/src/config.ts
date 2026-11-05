@@ -1,10 +1,11 @@
 /** Runtime config: config.json next to index.html, read on load, so demo URLs change without a rebuild.
  *  Each demo in demos.ts reads "<id>Url" (where its card opens) and an optional "<id>Image" (a card screenshot, relative to
- *  index.html or an absolute URL). apiKeyUrl is where "Get API key" goes. */
-export interface SiteConfig { urls: Record<string, string>; images: Record<string, string>; apiKeyUrl: string }
+ *  index.html or an absolute URL). apiKeyUrl is where "Get API key" goes; keyCheckUrl is the demo backend endpoint that
+ *  checks a key (POST {key}). */
+export interface SiteConfig { urls: Record<string, string>; images: Record<string, string>; apiKeyUrl: string; keyCheckUrl: string }
 
 const DEFAULT_URLS: Record<string, string> = { receipt: "http://localhost:8631", returns: "http://localhost:8632" };
-export const DEFAULTS: SiteConfig = { urls: DEFAULT_URLS, images: {}, apiKeyUrl: "https://app.vllm-sr.ai/#key" };
+export const DEFAULTS: SiteConfig = { urls: DEFAULT_URLS, images: {}, apiKeyUrl: "https://app.vllm-sr.ai/#key", keyCheckUrl: "http://localhost:8631/api/key/check" };
 
 const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 
@@ -17,10 +18,10 @@ export async function loadConfig(): Promise<SiteConfig> {
     const images: Record<string, string> = {};
     for (const [k, v] of Object.entries(raw)) {
       const m = /^(.+)(Url|Image)$/.exec(k);
-      if (!m || m[1] === "apiKey" || !str(v)) continue;
+      if (!m || m[1] === "apiKey" || m[1] === "keyCheck" || !str(v)) continue;
       (m[2] === "Url" ? urls : images)[m[1]] = str(v);
     }
-    return { urls, images, apiKeyUrl: str(raw.apiKeyUrl) || DEFAULTS.apiKeyUrl };
+    return { urls, images, apiKeyUrl: str(raw.apiKeyUrl) || DEFAULTS.apiKeyUrl, keyCheckUrl: str(raw.keyCheckUrl) || DEFAULTS.keyCheckUrl };
   } catch {
     return DEFAULTS;
   }

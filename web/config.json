@@ -3,5 +3,6 @@
   "returnsUrl": "http://localhost:8632",
   "receiptImage": "",
   "returnsImage": "",
-  "apiKeyUrl": "https://app.vllm-sr.ai/#key"
+  "apiKeyUrl": "https://app.vllm-sr.ai/#key",
+  "keyCheckUrl": "http://localhost:8631/api/key/check"
 }

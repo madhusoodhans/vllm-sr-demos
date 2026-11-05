@@ -65,7 +65,11 @@
 .keySection { display: grid; gap: var(--space-3); width: min(100%, 640px); margin: 0 auto; padding: var(--space-5) var(--space-6); border: 1px solid var(--border); border-radius: var(--radius-surface); background: var(--surface); }
 .key { display: flex; align-items: end; gap: var(--space-2); }
 .keyField { flex: 1; min-width: 0; }
-.keyNote { color: var(--text-muted); font-size: var(--text-xs); }
+.keyFoot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--control-height-sm, 32px); }
+.keyStatus { display: flex; align-items: flex-start; gap: var(--space-2); color: var(--text-muted); font-size: var(--text-xs); line-height: 1.5; }
+.keyStatus svg { flex: none; margin-top: 1px; }
+.keyStatus[data-state="ok"] { color: var(--success); font-size: var(--text-sm); }
+.keyStatus[data-state="problem"] { color: var(--danger); font-size: var(--text-sm); }
 /* Secondary button look (Arc button, secondary, md). */
 .keyLink { display: inline-flex; flex: none; min-height: var(--control-height-md); align-items: center; gap: var(--space-2); padding: 0 var(--space-4); border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--surface); color: var(--foreground); font-size: var(--text-sm); font-weight: 500; text-decoration: none; white-space: nowrap; transition: background var(--duration-fast) var(--ease-standard); }
 .keyLink svg:last-child { color: var(--text-muted); }

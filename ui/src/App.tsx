@@ -2,11 +2,12 @@
  * that a demo needs before it opens (see apiKey.ts), one card per demo from demos.ts, and tiles to explore further.
  * Facts here are checked against the Decision API / MoM docs and the vllm-sr Hugging Face model cards (see README.md). */
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
-import { ArrowUpRight, BookOpen, Brain, ChevronRight, FlaskConical, Sailboat, Scan, ShieldCheck, Sparkles, Plus, KeyRound, Layers, MessageSquareText, Route, SlidersHorizontal } from "lucide-react";
+import { ArrowUpRight, BookOpen, Brain, ChevronRight, CircleAlert, CircleCheck, FlaskConical, Sailboat, Scan, ShieldCheck, Sparkles, Plus, KeyRound, Layers, MessageSquareText, Route, SlidersHorizontal } from "lucide-react";
 import { ThemeSwitch, type Theme } from "./components/arc/theme-switch/theme-switch";
 import { PasswordField } from "./components/arc/password-field/password-field";
 import { Dialog, DialogClose, DialogContent } from "./components/arc/dialog/dialog";
-import { checkKey, loadKey, saveKey, type KeyProblem } from "./apiKey";
+import { Button } from "./components/arc/button/button";
+import { checkKey, forgetKey, formatProblem, loadKey, loadKeyOk, saveKey, withKey, type KeyProblem } from "./apiKey";
 import { DemoCard } from "./DemoCard";
 import { DEMOS } from "./demos";
 import { DEFAULTS, loadConfig, withTheme, type SiteConfig } from "./config";
@@ -70,27 +71,84 @@ const FLOW = [
   { icon: Layers, title: "LLM, when needed", text: "Only what passed reaches it" },
 ];
 
-const KEY_PROBLEMS: Record<KeyProblem, { title: string; text: string }> = {
-  missing: { title: "Add your API key first", text: "The demos run on the hosted vllm-sr models and need a key. Paste yours in the API key field, or get a free one." },
-  invalid: { title: "That API key did not work", text: "Check that you copied the whole key and try again, or get a new one." },
-};
+/** The dialog shown when "Open demo" is held back. */
+function problemDialog(p: KeyProblem): { title: string; text: string } {
+  if (p.code === "missing") return { title: "Add your API key first", text: "The demos run on the hosted vllm-sr models and need a key. Paste yours in the API key field, or get a free one." };
+  if (p.code === "check_down" || p.code === "unreachable" || p.code === "error" || p.code === "rate_limited") return { title: "Could not check your API key", text: p.message };
+  return { title: "That API key did not work", text: p.message };
+}
+
+/** Idle (not checked yet), checking, ok, or a problem from apiKey.ts. */
+type KeyStatus = { state: "idle" } | { state: "checking" } | { state: "ok" } | { state: "problem"; problem: KeyProblem };
+
+/** Leaves the page (and a Hugging Face Space's iframe, like target="_top") for the demo. */
+function go(url: string) {
+  try { (window.top ?? window).location.href = url; } catch { location.href = url; }
+}
 
 export function App() {
   const [theme, setTheme] = useTheme();
   const config = useConfig();
   const [apiKey, setApiKey] = useState(loadKey);
+  const [status, setStatus] = useState<KeyStatus>(() => (loadKeyOk() ? { state: "ok" } : { state: "idle" }));
   const [problem, setProblem] = useState<KeyProblem | null>(null);
-  const [lastProblem, setLastProblem] = useState<KeyProblem>("missing");
+  const [lastProblem, setLastProblem] = useState<KeyProblem>({ code: "missing", message: "" });
   const keyInput = useRef<HTMLInputElement>(null);
+  const pending = useRef<AbortController | null>(null);
   const keyUrl = config?.apiKeyUrl ?? DEFAULTS.apiKeyUrl;
+  const checkUrl = config?.keyCheckUrl ?? DEFAULTS.keyCheckUrl;
 
-  /** A demo opens only with a key that passes; otherwise the link is held back and the dialog says why. */
+  /** Format here, then the live check through a demo backend. Resolves true when the key works. */
+  const runCheck = async (): Promise<KeyProblem | null> => {
+    pending.current?.abort();
+    const ctrl = new AbortController();
+    pending.current = ctrl;
+    const key = apiKey.trim();
+    const local = formatProblem(key);
+    if (local) { setStatus({ state: "problem", problem: local }); return local; }
+    setStatus({ state: "checking" });
+    try {
+      const p = await checkKey(key, checkUrl, ctrl.signal);
+      if (pending.current !== ctrl) return p;
+      pending.current = null;
+      saveKey(key, !p);
+      setStatus(p ? { state: "problem", problem: p } : { state: "ok" });
+      return p;
+    } catch {
+      return null; // aborted: a newer check or an edit took over
+    }
+  };
+
+  const showProblem = (p: KeyProblem) => { setProblem(p); setLastProblem(p); };
+
+  /** A demo opens only with a key that passed the live check. Checked: the key rides in the URL fragment (never the
+   *  query) so it reaches the demo page but no server. Not checked yet: hold the link, check, then go. */
   const onOpenDemo = (e: MouseEvent<HTMLAnchorElement>) => {
-    const p = checkKey(apiKey);
-    if (!p) return;
+    const link = e.currentTarget;
+    const key = apiKey.trim();
+    if (status.state === "ok" && key) {
+      const plain = link.href;
+      link.href = withKey(plain, key);
+      setTimeout(() => { link.href = plain; }, 0); // the key does not stay in the page's links
+      return;
+    }
     e.preventDefault();
-    setProblem(p);
-    setLastProblem(p);
+    if (!key) { showProblem(formatProblem("")!); return; }
+    if (status.state === "checking") return;
+    const target = link.href;
+    runCheck().then((p) => {
+      if (p) showProblem(p);
+      else go(withKey(target, key));
+    });
+  };
+
+  const onForget = () => {
+    pending.current?.abort();
+    pending.current = null;
+    forgetKey();
+    setApiKey("");
+    setStatus({ state: "idle" });
+    keyInput.current?.focus();
   };
 
   return (
@@ -131,20 +189,29 @@ export function App() {
           </div>
         </section>
 
-        {/* API KEY: checked before a demo opens (apiKey.ts) and kept for this tab. Not sent to the demos yet. */}
+        {/* API KEY: checked here (format) and through a demo backend (live), kept for this tab, handed to a demo in the URL fragment. */}
         <section className={styles.keySection} aria-label="API key">
-          <form className={styles.key} onSubmit={(e) => e.preventDefault()}>
+          <form className={styles.key} onSubmit={(e) => { e.preventDefault(); void runCheck(); }}>
             <div className={styles.keyField}>
               <PasswordField ref={keyInput} label="Your API key" name="api-key" placeholder="Paste a vllm-sr API key" autoComplete="off" spellCheck={false}
-                value={apiKey} aria-invalid={problem ? true : undefined}
-                onChange={(e) => { setApiKey(e.target.value); saveKey(e.target.value.trim()); setProblem(null); }}
+                value={apiKey} aria-invalid={status.state === "problem" ? true : undefined} aria-describedby="key-status"
+                onChange={(e) => { pending.current?.abort(); pending.current = null; setApiKey(e.target.value); saveKey(e.target.value.trim()); setStatus({ state: "idle" }); setProblem(null); }}
                 messages={{ showPassword: "Show key", hidePassword: "Hide key" }} />
             </div>
+            <Button type="submit" variant="primary" loading={status.state === "checking"}>{status.state === "checking" ? "Checking" : "Check key"}</Button>
             <a className={styles.keyLink} href={keyUrl} target="_top">
               <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />Get API key<ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" />
             </a>
           </form>
-          <p className={styles.keyNote}>The demos need a key. One free key works for both the Decision API and MoM.</p>
+          <div className={styles.keyFoot}>
+            <p id="key-status" className={styles.keyStatus} data-state={status.state} role="status" aria-live="polite">
+              {status.state === "ok" && <><CircleCheck size={16} strokeWidth={1.75} aria-hidden="true" />Key works for decisions and chat</>}
+              {status.state === "problem" && <><CircleAlert size={16} strokeWidth={1.75} aria-hidden="true" />{status.problem.message}</>}
+              {status.state === "checking" && "Checking your key with the hosted API"}
+              {status.state === "idle" && "The demos need a key. One free key works for both the Decision API and MoM. It stays in this tab only."}
+            </p>
+            {apiKey && <Button type="button" variant="ghost" size="sm" onClick={onForget}>Forget key</Button>}
+          </div>
         </section>
 
         <section className={styles.section} aria-labelledby="demos-title">
@@ -191,7 +258,7 @@ export function App() {
       </footer>
 
       <Dialog open={problem !== null} onOpenChange={(open) => { if (!open) setProblem(null); }}>
-        <DialogContent title={KEY_PROBLEMS[problem ?? lastProblem].title} description={KEY_PROBLEMS[problem ?? lastProblem].text}
+        <DialogContent title={problemDialog(problem ?? lastProblem).title} description={problemDialog(problem ?? lastProblem).text}
           onCloseAutoFocus={(e) => { e.preventDefault(); keyInput.current?.focus(); }}>
           <div className={styles.dialogActions}>
             <a className={styles.keyLink} href={keyUrl} target="_top">
