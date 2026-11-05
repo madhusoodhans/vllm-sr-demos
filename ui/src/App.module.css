@@ -1,5 +1,15 @@
 /* Page: bar, centred summary with the request flow, API key, demo cards, explore tiles, footer. The page scrolls normally. */
-.shell { display: grid; grid-template-rows: auto 1fr auto; min-height: 100dvh; }
+.shell { display: grid; grid-template-rows: auto 1fr auto; min-height: 100dvh; overflow-x: clip; }
+/* First screen only: a soft tint behind the summary that fades into the plain page background by the end of the first
+ * viewport, so the sections below stay plain. Built from --accent, so it follows light and dark themes. */
+.main { position: relative; isolation: isolate; }
+.main::before {
+  content: ""; position: absolute; z-index: -1; top: 0; left: 50%; width: 100vw; height: min(100dvh, 980px); transform: translateX(-50%); pointer-events: none;
+  background:
+    radial-gradient(60% 55% at 18% 0%, color-mix(in oklab, var(--accent) 16%, transparent), transparent 70%),
+    radial-gradient(55% 50% at 85% 10%, color-mix(in oklab, oklch(70% .14 300) 13%, transparent), transparent 70%),
+    linear-gradient(to bottom, color-mix(in oklab, var(--accent) 7%, var(--background)), var(--background));
+}
 
 /* The demos' top bar: a dark band in both themes, with Arc's tokens redefined so its controls read on it. */
 .bar {
