@@ -34,12 +34,15 @@ Edit `config.json` in the Space repo (Files tab, or a commit). No rebuild is nee
   "receiptUrl": "https://<owner>-<receipt-space>.hf.space",
   "returnsUrl": "https://<owner>-<returns-space>.hf.space",
   "receiptImage": "",
-  "returnsImage": ""
+  "returnsImage": "",
+  "keyCheckUrl": "https://<owner>-<receipt-space>.hf.space/api/key/check"
 }
 ```
 
-Either form of a Space URL works: `https://<owner>-<space>.hf.space` (the app alone) or
-`https://huggingface.co/spaces/<owner>/<space>` (the Space page). The buttons open the demo in the same browser tab,
+Use the `https://<owner>-<space>.hf.space` form (the app alone): the visitor's key is handed over in the URL fragment
+(`#key=...`), and the Space page form (`https://huggingface.co/spaces/<owner>/<space>`) does not pass it on to the
+app inside its frame. `keyCheckUrl` is the receipt demo's key check (either demo's works); the demos must list this
+Space's URL in `LANDING_URL` so the check is allowed across origins. The buttons open the demo in the same browser tab,
 leaving this Space's frame.
 
 To show screenshots on the demo cards, add the images to the Space repo (for example `images/receipt.png`) and set

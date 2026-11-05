@@ -18,9 +18,18 @@ the receipt validator and the product returns validator. The page scrolls: a dar
 with the request flow, a centred API key panel with "Get API key", one card per demo (with "Show more" for its steps),
 then "Explore more" tiles for the vllm-sr Spaces, model collections and docs, and a footer.
 
-API key: "Open demo" first checks the key field (`ui/src/apiKey.ts`). Empty or wrong, a dialog says so and the demo
-does not open. For now only `1234` passes; `checkKey` will ask the hosted API once keys are wired. The key stays in
-this tab (sessionStorage) so it is still there after "All demos", and it is not sent to the demos yet.
+API key: the visitor pastes their own vllm-sr key (from app.vllm-sr.ai, `sk-vsr-...`) and presses "Check key"
+(`ui/src/apiKey.ts`). The page checks the format first (an `sk-pt-` key is refused: it only works for chat), then
+POSTs `{"key": ...}` to `keyCheckUrl`, a demo backend's `/api/key/check`, because the hosted API sends no CORS headers.
+That endpoint makes one tiny decision call and one tiny chat call with the key and answers `{"ok": true}` or
+`{"ok": false, "code", "message"}` (codes: `format`, `wrong_kind`, `invalid`, `disabled`, `quota`, `rate_limited`,
+`unreachable`, `error`). The page shows a spinner while it checks, the message for a failure (or that the check service
+cannot be reached), and "Key works for decisions and chat" on success.
+
+"Open demo" stays held back until the key has passed; an unchecked key is checked first. The demo opens at
+`<demoUrl>/?theme=<theme>#key=<key>`: the key rides in the URL fragment, which browsers never send to a server, and
+the demo removes it from the address bar on load and keeps it in its own tab storage. On this page the key lives in
+sessionStorage only (gone when the tab closes; never localStorage, cookies or a query string). "Forget key" clears it.
 
 Theme: the cards link to each demo with `?theme=light|dark`, and each demo's "All demos" link comes back the same way,
 so the theme follows the visitor across origins. Each page reads the parameter before first paint, stores it and
@@ -37,7 +46,7 @@ Geist and Inter bundled from @fontsource).
 ```
 
 The demos are expected on http://localhost:8631 (receipt validator) and http://localhost:8632 (product returns
-validator).
+validator), started with `LANDING_URL=http://localhost:8630`. The key check goes to the receipt demo's backend.
 
 ## Configure the demo links, screenshots and key link
 
@@ -50,7 +59,8 @@ rebuild:
   "returnsUrl": "http://localhost:8632",
   "receiptImage": "",
   "returnsImage": "",
-  "apiKeyUrl": "https://app.vllm-sr.ai/#key"
+  "apiKeyUrl": "https://app.vllm-sr.ai/#key",
+  "keyCheckUrl": "http://localhost:8631/api/key/check"
 }
 ```
 
@@ -62,6 +72,8 @@ rebuild:
   branding.
 
 - `apiKeyUrl`: where "Get API key" goes.
+- `keyCheckUrl`: the key check endpoint (`POST /api/key/check` on either demo backend). It must allow this page's
+  origin with CORS; the demos allow `LANDING_URL` plus http://localhost:8630 and http://127.0.0.1:8630.
 
 A new demo is one entry in `ui/src/demos.ts` (title, summary, steps, models, tone) plus `<id>Url` here; it gets its own
 card, and a drawn preview if one is added in `ui/src/Previews.tsx`.
