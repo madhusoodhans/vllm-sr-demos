@@ -81,8 +81,12 @@ function problemDialog(p: KeyProblem): { title: string; text: string } {
 /** Idle (not checked yet), checking, ok, or a problem from apiKey.ts. */
 type KeyStatus = { state: "idle" } | { state: "checking" } | { state: "ok" } | { state: "problem"; problem: KeyProblem };
 
-/** Leaves the page (and a Hugging Face Space's iframe, like target="_top") for the demo. */
+/** Opens the demo. A demo on this origin (all three apps in one Space) opens in this frame, so a Hugging Face Space
+ * page keeps its frame (and a private Space its sign-in); a demo on another origin leaves the frame, like target="_top". */
 function go(url: string) {
+  let sameOrigin = false;
+  try { sameOrigin = new URL(url, location.href).origin === location.origin; } catch { /* not a URL: leave the frame */ }
+  if (sameOrigin) { location.href = url; return; }
   try { (window.top ?? window).location.href = url; } catch { location.href = url; }
 }
 
