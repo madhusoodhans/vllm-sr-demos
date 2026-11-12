@@ -8,10 +8,11 @@ import type { Demo } from "./demos";
 import { Preview } from "./Previews";
 import styles from "./DemoCard.module.css";
 
-/** A demo on this origin (all apps in one Space) opens in this frame; one on another origin leaves the frame. */
-function linkTarget(href: string | null): "_top" | undefined {
-  if (!href) return "_top";
-  try { return new URL(href, location.href).origin === location.origin ? undefined : "_top"; } catch { return "_top"; }
+/** A demo on this origin (all apps in one Space) opens in this frame; one on another origin opens in a new tab
+ * (a Hugging Face Space's iframe may open new tabs but may not navigate the page around it). */
+function linkTarget(href: string | null): "_blank" | undefined {
+  if (!href) return undefined;
+  try { return new URL(href, location.href).origin === location.origin ? undefined : "_blank"; } catch { return "_blank"; }
 }
 
 /** onOpen runs before the link is followed; it may call preventDefault (no API key yet). */
@@ -51,8 +52,7 @@ export function DemoCard({ demo, href, image, onOpen }: { demo: Demo; href: stri
             {open ? "Show less" : "Show more"}
             <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" className={styles.chevron} />
           </button>
-          {/* target="_top": on a Hugging Face Space the page runs in an iframe, and this leaves it for the demo. */}
-          <a className={styles.cta} href={href ?? undefined} target={linkTarget(href)} aria-disabled={href ? undefined : true} data-demo={demo.id} onClick={onOpen}
+          <a className={styles.cta} href={href ?? undefined} target={linkTarget(href)} rel={linkTarget(href) ? "noopener noreferrer" : undefined} aria-disabled={href ? undefined : true} data-demo={demo.id} onClick={onOpen}
             aria-label={`${demo.action}: ${demo.title}`}>
             {demo.action}<ArrowRight size={16} strokeWidth={1.75} aria-hidden="true" />
           </a>

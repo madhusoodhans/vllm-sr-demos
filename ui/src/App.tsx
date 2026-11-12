@@ -82,12 +82,14 @@ function problemDialog(p: KeyProblem): { title: string; text: string } {
 type KeyStatus = { state: "idle" } | { state: "checking" } | { state: "ok" } | { state: "problem"; problem: KeyProblem };
 
 /** Opens the demo. A demo on this origin (all three apps in one Space) opens in this frame, so a Hugging Face Space
- * page keeps its frame (and a private Space its sign-in); a demo on another origin leaves the frame, like target="_top". */
+ * page keeps its frame (and a private Space its sign-in). A demo on another origin opens in a new tab: a Space's
+ * iframe may open new tabs but may not navigate the page around it. If the new tab is blocked, it opens here. */
 function go(url: string) {
   let sameOrigin = false;
-  try { sameOrigin = new URL(url, location.href).origin === location.origin; } catch { /* not a URL: leave the frame */ }
+  try { sameOrigin = new URL(url, location.href).origin === location.origin; } catch { /* not a URL: new tab */ }
   if (sameOrigin) { location.href = url; return; }
-  try { (window.top ?? window).location.href = url; } catch { location.href = url; }
+  const tab = window.open(url, "_blank");
+  if (tab) tab.opener = null; else location.href = url;
 }
 
 export function App() {
@@ -160,9 +162,9 @@ export function App() {
       <header className={styles.bar}>
         <span className={styles.brand}><Route size={18} strokeWidth={1.75} aria-hidden="true" />vLLM Semantic Router demos</span>
         <nav className={styles.barLinks} aria-label="Hosted APIs">
-          <a href={DECISION} target="_top">Decision API</a>
-          <a href={MOM} target="_top">MoM</a>
-          <a href={HF} target="_top">Models</a>
+          <a href={DECISION} target="_blank" rel="noopener noreferrer">Decision API</a>
+          <a href={MOM} target="_blank" rel="noopener noreferrer">MoM</a>
+          <a href={HF} target="_blank" rel="noopener noreferrer">Models</a>
         </nav>
         <ThemeSwitch theme={theme} iconOnly variant="rise" onThemeChange={(next) => setTheme(next)} />
       </header>
@@ -203,7 +205,7 @@ export function App() {
                 messages={{ showPassword: "Show key", hidePassword: "Hide key" }} />
             </div>
             <Button type="submit" variant="primary" loading={status.state === "checking"}>{status.state === "checking" ? "Checking" : "Check key"}</Button>
-            <a className={styles.keyLink} href={keyUrl} target="_top">
+            <a className={styles.keyLink} href={keyUrl} target="_blank" rel="noopener noreferrer">
               <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />Get API key<ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" />
             </a>
           </form>
@@ -243,7 +245,7 @@ export function App() {
               <ul className={styles.tiles}>
                 {g.links.map(({ icon: Icon, title, text, href }) => (
                   <li key={title}>
-                    <a className={styles.tile} href={href} target="_top">
+                    <a className={styles.tile} href={href} target="_blank" rel="noopener noreferrer">
                       <span className={styles.tileIcon}><Icon size={18} strokeWidth={1.75} aria-hidden="true" /></span>
                       <span className={styles.tileTitle}>{title}<ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" className={styles.tileArrow} /></span>
                       <span className={styles.tileText}>{text}</span>
@@ -265,7 +267,7 @@ export function App() {
         <DialogContent title={problemDialog(problem ?? lastProblem).title} description={problemDialog(problem ?? lastProblem).text}
           onCloseAutoFocus={(e) => { e.preventDefault(); keyInput.current?.focus(); }}>
           <div className={styles.dialogActions}>
-            <a className={styles.keyLink} href={keyUrl} target="_top">
+            <a className={styles.keyLink} href={keyUrl} target="_blank" rel="noopener noreferrer">
               <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />Get API key<ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" />
             </a>
             <DialogClose className={styles.dialogPrimary}>Enter key</DialogClose>
