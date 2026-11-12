@@ -2,7 +2,7 @@
  * that a demo needs before it opens (see apiKey.ts), one card per demo from demos.ts, and tiles to explore further.
  * Facts here are checked against the System Duo docs (app.vllm-sr.ai/docs) and the vllm-sr Hugging Face model cards. */
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
-import { ArrowUpRight, BookOpen, Brain, ChevronDown, ChevronRight, CircleAlert, CircleCheck, FlaskConical, Sailboat, Scan, ShieldCheck, Sparkles, Plus, KeyRound, Layers, MessageSquareText, Route, SlidersHorizontal } from "lucide-react";
+import { ArrowDown, ArrowUpRight, BookOpen, Brain, ChevronDown, ChevronRight, CircleAlert, CircleCheck, FlaskConical, Sailboat, Scan, ShieldCheck, Sparkles, Plus, KeyRound, Layers, MessageSquareText, Route, SlidersHorizontal } from "lucide-react";
 import { ThemeSwitch, type Theme } from "./components/arc/theme-switch/theme-switch";
 import { PasswordField } from "./components/arc/password-field/password-field";
 import { Dialog, DialogClose, DialogContent } from "./components/arc/dialog/dialog";
@@ -195,9 +195,16 @@ export function App() {
                   messages={{ showPassword: "Show key", hidePassword: "Hide key" }} />
               </div>
               <Button type="submit" variant="primary" loading={status.state === "checking"}>{status.state === "checking" ? "Checking" : "Check key"}</Button>
-              <a className={styles.keyLink} href={keyUrl} target="_blank" rel="noopener noreferrer">
-                <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />Get API key<ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" />
-              </a>
+              {/* Once the key works, the next step is a demo: "Get API key" becomes "Go to demos" (from Shailen's add-on on the Space). */}
+              {status.state === "ok" ? (
+                <a className={styles.keyLink} href="#demos">
+                  <ArrowDown size={16} strokeWidth={1.75} aria-hidden="true" />Go to demos
+                </a>
+              ) : (
+                <a className={styles.keyLink} href={keyUrl} target="_blank" rel="noopener noreferrer">
+                  <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />Get API key<ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" />
+                </a>
+              )}
             </form>
             <div className={styles.keyFoot}>
               <p id="key-status" className={styles.keyStatus} data-state={status.state} role="status" aria-live="polite">
@@ -246,7 +253,7 @@ export function App() {
           </ul>
         </section>
 
-        <section className={styles.section} aria-labelledby="demos-title">
+        <section className={styles.section} id="demos" aria-labelledby="demos-title">
           <div className={styles.sectionHead}>
             <h2 id="demos-title">Live demos</h2>
             <p className={styles.sub}>Each demo shows every decision as it happens, with the model, time and probabilities.</p>
