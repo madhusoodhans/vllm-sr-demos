@@ -11,8 +11,8 @@ export interface KeyProblem { code: KeyCode; message: string }
 /** Plain messages for each code; the check service's own message wins when it sends one. */
 export const KEY_MESSAGES: Record<KeyCode, string> = {
   missing: "Paste your API key first.",
-  format: "That does not look like a vllm-sr API key. Keys from app.vllm-sr.ai start with sk-vsr- and have no spaces.",
-  wrong_kind: "This demo needs a key from app.vllm-sr.ai: sk-pt keys only work for chat.",
+  format: "That does not look like a System Duo API key. Keys from app.vllm-sr.ai start with sk-vsr- and have no spaces.",
+  wrong_kind: "This demo needs a key from app.vllm-sr.ai: sk-pt keys only work for System Two chat.",
   invalid: "That API key was not accepted. Check that you copied the whole key, or get a new one.",
   disabled: "That API key is disabled or does not have access to these models.",
   quota: "That API key has used its daily quota. It resets at 00:00 UTC.",

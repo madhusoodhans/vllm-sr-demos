@@ -1,6 +1,6 @@
-/* The landing page: a dark top bar like the demos', a centred summary of vllm-sr with the request flow, the API key
+/* The landing page: a dark top bar like the demos', a centred summary of System Duo with the request flow, the API key
  * that a demo needs before it opens (see apiKey.ts), one card per demo from demos.ts, and tiles to explore further.
- * Facts here are checked against the Decision API / MoM docs and the vllm-sr Hugging Face model cards (see README.md). */
+ * Facts here are checked against the System Duo docs (app.vllm-sr.ai/docs) and the vllm-sr Hugging Face model cards. */
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import { ArrowUpRight, BookOpen, Brain, ChevronRight, CircleAlert, CircleCheck, FlaskConical, Sailboat, Scan, ShieldCheck, Sparkles, Plus, KeyRound, Layers, MessageSquareText, Route, SlidersHorizontal } from "lucide-react";
 import { ThemeSwitch, type Theme } from "./components/arc/theme-switch/theme-switch";
@@ -15,8 +15,8 @@ import styles from "./App.module.css";
 import cardStyles from "./DemoCard.module.css";
 
 const HF = "https://huggingface.co/vllm-sr";
-const DECISION = "https://decision.vllm-sr.ai";
-const MOM = "https://mom.vllm-sr.ai";
+const APP = "https://app.vllm-sr.ai/";
+const DOCS = "https://app.vllm-sr.ai/docs";
 
 function useTheme(): [Theme, (t: Theme) => void] {
   const [theme, setThemeState] = useState<Theme>(() => (document.documentElement.dataset.theme === "dark" ? "dark" : "light"));
@@ -56,8 +56,8 @@ const EXPLORE = [
     links: [
       { icon: Brain, title: "D3 models", text: "The Decision 3.0 family on Hugging Face, from edge to ultra.", href: `${COLLECTIONS}/decision-30-6aca5f47b0d942380f6e4a64` },
       { icon: Sailboat, title: "Vela models", text: "Open routing models, 0.3B to 27B: the router's decisions in one call.", href: `${COLLECTIONS}/vela-30-6ad1c430eb1718eb4754edcd` },
-      { icon: BookOpen, title: "API docs", text: "Requests, question types, keys and limits for the Decision API and MoM.", href: "https://app.vllm-sr.ai/docs" },
-      { icon: Route, title: "vLLM Semantic Router", text: "Get a free key and try the hosted APIs in the browser.", href: "https://app.vllm-sr.ai/" },
+      { icon: BookOpen, title: "API docs", text: "Requests, question types, keys and limits for System One and System Two.", href: DOCS },
+      { icon: Route, title: "System Duo", text: "Get a free key and try System One and System Two in the browser.", href: APP },
     ],
   },
 ];
@@ -65,15 +65,15 @@ const EXPLORE = [
 /** The request flow, left to right, with lit chevrons between the steps. */
 const FLOW = [
   { icon: MessageSquareText, title: "Request", text: "Text, an image or a video" },
-  { icon: Route, title: "Semantic Router", text: "Reads each request by what it means" },
-  { icon: Brain, title: "D3 and Vela", text: "Answer typed questions with probabilities" },
+  { icon: Brain, title: "System One", text: "D3 and Vela answer typed questions with probabilities" },
   { icon: SlidersHorizontal, title: "Your rules", text: "Thresholds in code pick the path" },
-  { icon: Layers, title: "LLM, when needed", text: "Only what passed reaches it" },
+  { icon: Route, title: "Semantic Router", text: "Picks the model and effort for what passed" },
+  { icon: Layers, title: "System Two, when needed", text: "Only what passed reaches an LLM" },
 ];
 
 /** The dialog shown when "Open demo" is held back. */
 function problemDialog(p: KeyProblem): { title: string; text: string } {
-  if (p.code === "missing") return { title: "Add your API key first", text: "The demos run on the hosted vllm-sr models and need a key. Paste yours in the API key field, or get a free one." };
+  if (p.code === "missing") return { title: "Add your API key first", text: "The demos run on the hosted System Duo APIs and need a key. Paste yours in the API key field, or get a free one." };
   if (p.code === "check_down" || p.code === "unreachable" || p.code === "error" || p.code === "rate_limited") return { title: "Could not check your API key", text: p.message };
   return { title: "That API key did not work", text: p.message };
 }
@@ -160,10 +160,10 @@ export function App() {
   return (
     <div className={styles.shell}>
       <header className={styles.bar}>
-        <span className={styles.brand}><Route size={18} strokeWidth={1.75} aria-hidden="true" />vLLM Semantic Router demos</span>
-        <nav className={styles.barLinks} aria-label="Hosted APIs">
-          <a href={DECISION} target="_blank" rel="noopener noreferrer">Decision API</a>
-          <a href={MOM} target="_blank" rel="noopener noreferrer">MoM</a>
+        <span className={styles.brand}><Route size={18} strokeWidth={1.75} aria-hidden="true" />System Duo demos</span>
+        <nav className={styles.barLinks} aria-label="System Duo">
+          <a href={APP} target="_blank" rel="noopener noreferrer">System Duo</a>
+          <a href={DOCS} target="_blank" rel="noopener noreferrer">Docs</a>
           <a href={HF} target="_blank" rel="noopener noreferrer">Models</a>
         </nav>
         <ThemeSwitch theme={theme} iconOnly variant="rise" onThemeChange={(next) => setTheme(next)} />
@@ -171,11 +171,12 @@ export function App() {
 
       <main className={styles.main}>
         <section className={styles.hero} aria-labelledby="title">
-          <h1 id="title">Decision models in front of your LLMs</h1>
+          <h1 id="title">System One decides. System Two answers.</h1>
           <p className={styles.lead}>
-            vLLM Semantic Router reads every request before an LLM does. Its decision models, D3 and Vela, answer typed
-            questions about the request as probabilities, from one forward pass and no generated text. Your code sets the
-            thresholds, so bad inputs and attacks stop early and only the work that needs a large model reaches one.
+            System Duo, by vLLM Semantic Router, pairs a fast system with a slow one on one free key. System One, the
+            decision models D3 and Vela, answers typed questions about each request as probabilities, from one forward pass
+            and no generated text. Your code sets the thresholds, so bad inputs and attacks stop early. System Two gets only
+            what passed: the router picks the model and the effort it needs.
           </p>
           <div className={styles.flow}>
             <ol className={styles.flowList} aria-label="How a request flows">
@@ -199,7 +200,7 @@ export function App() {
         <section className={styles.keySection} aria-label="API key">
           <form className={styles.key} onSubmit={(e) => { e.preventDefault(); void runCheck(); }}>
             <div className={styles.keyField}>
-              <PasswordField ref={keyInput} label="Your API key" name="api-key" placeholder="Paste a vllm-sr API key" autoComplete="off" spellCheck={false}
+              <PasswordField ref={keyInput} label="Your API key" name="api-key" placeholder="Paste a System Duo API key" autoComplete="off" spellCheck={false}
                 value={apiKey} aria-invalid={status.state === "problem" ? true : undefined} aria-describedby="key-status"
                 onChange={(e) => { pending.current?.abort(); pending.current = null; setApiKey(e.target.value); saveKey(e.target.value.trim()); setStatus({ state: "idle" }); setProblem(null); }}
                 messages={{ showPassword: "Show key", hidePassword: "Hide key" }} />
@@ -211,10 +212,10 @@ export function App() {
           </form>
           <div className={styles.keyFoot}>
             <p id="key-status" className={styles.keyStatus} data-state={status.state} role="status" aria-live="polite">
-              {status.state === "ok" && <><CircleCheck size={16} strokeWidth={1.75} aria-hidden="true" />Key works for decisions and chat</>}
+              {status.state === "ok" && <><CircleCheck size={16} strokeWidth={1.75} aria-hidden="true" />Key works for System One and System Two</>}
               {status.state === "problem" && <><CircleAlert size={16} strokeWidth={1.75} aria-hidden="true" />{status.problem.message}</>}
               {status.state === "checking" && "Checking your key with the hosted API"}
-              {status.state === "idle" && "The demos need a key. One free key works for both the Decision API and MoM. It stays in this tab only."}
+              {status.state === "idle" && "The demos need a key. One free key works for System One and System Two. It stays in this tab only."}
             </p>
             {apiKey && <Button type="button" variant="ghost" size="sm" onClick={onForget}>Forget key</Button>}
           </div>
@@ -259,7 +260,7 @@ export function App() {
       </main>
 
       <footer className={styles.footer}>
-        <span>vLLM Semantic Router demos</span>
+        <span>System Duo demos by vLLM Semantic Router</span>
         <span>The hosted APIs are free for research and evaluation.</span>
       </footer>
 
