@@ -1,4 +1,4 @@
-/* Page: bar, centred summary with the request flow, API key, demo cards, explore tiles, footer. The page scrolls normally. */
+/* Page: bar, title with the API key, demo cards, how it works (flow and features), explore tiles, footer. The page scrolls normally. */
 .shell { display: grid; grid-template-rows: auto 1fr auto; min-height: 100dvh; overflow-x: clip; }
 /* First screen only: a soft tint behind the summary that fades into the plain page background by the end of the first
  * viewport, so the sections below stay plain. Built from --accent, so it follows light and dark themes. */
@@ -36,12 +36,19 @@
 
 .main { display: flex; flex-direction: column; gap: 0; width: 100%; max-width: 1180px; margin-inline: auto; padding: 0 clamp(16px, 3vw, 28px); }
 
-/* Summary: centred headline and lead, then the flow across the full width. */
-.hero { display: grid; justify-items: center; gap: var(--space-5); padding: var(--space-16) 0 var(--space-12); text-align: center; }
-.hero h1 { max-width: 760px; font-size: clamp(var(--text-3xl), 5vw, var(--text-5xl)); text-wrap: balance; }
-.lead { max-width: 680px; color: var(--text-secondary); font-size: var(--text-lg); text-wrap: pretty; }
-.hero .flow { width: 100%; margin-top: var(--space-6); text-align: initial; }
-@media (max-width: 640px) { .hero { padding: var(--space-10) 0 var(--space-8); } .lead { font-size: var(--text-base); } }
+/* First screen: the title in System Duo's serif (Cormorant Garamond, as on app.vllm-sr.ai) with "decides" in its fast red
+ * and "answers" in its slow blue, one line, then the API key. It fills most of the first viewport, so the demos come on
+ * the first scroll. */
+.hero { display: grid; justify-items: center; align-content: center; gap: var(--space-6); min-height: min(calc(100dvh - 56px), 820px); padding: var(--space-12) 0; text-align: center; }
+.title { --fast: oklch(48% .16 35); --slow: oklch(43% .12 265);
+  max-width: 980px; font-family: var(--font-serif); font-size: clamp(48px, 8.4vw, 112px); font-weight: 500; line-height: .98; letter-spacing: -.025em; text-wrap: balance; }
+.fast, .slow { font-style: italic; }
+.fast { color: var(--fast); }
+.slow { color: var(--slow); }
+:root[data-theme="dark"] .title { --fast: oklch(72% .15 38); --slow: oklch(76% .1 265); }
+.lead { max-width: 620px; color: var(--text-secondary); font-size: var(--text-lg); text-wrap: pretty; }
+.hero .keySection { margin-top: var(--space-4); text-align: initial; }
+@media (max-width: 640px) { .hero { min-height: 0; padding: var(--space-12) 0 var(--space-4); } .lead { font-size: var(--text-base); } }
 
 /* Flow: five steps on one line. Between each pair, three fixed chevrons light in turn, left to right, so the row reads
  * as a current flowing through it. Nothing moves; with reduced motion they stay lit at a steady level. */
@@ -101,6 +108,13 @@
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: var(--space-4); align-items: stretch; }
 @media (min-width: 1100px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* How it works: the flow, then four feature cards. */
+.features { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); padding: 0; list-style: none; }
+@media (max-width: 1000px) { .features { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .features { grid-template-columns: minmax(0, 1fr); } }
+.feature { display: grid; align-content: start; gap: var(--space-2); padding: var(--space-5); border: 1px solid var(--border); border-radius: var(--radius-surface); background: var(--surface); }
+.featureTitle { font-size: var(--text-base); font-weight: 500; }
 
 /* Explore: a labelled group of four link tiles per row, the full page width. */
 .exploreGroup { display: grid; gap: var(--space-3); }

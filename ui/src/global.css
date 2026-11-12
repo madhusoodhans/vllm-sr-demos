@@ -1,7 +1,7 @@
 /* Page-level styles. Arc's foundation.css owns the semantic tokens; Geist and Inter (free, bundled from @fontsource) are its default faces. */
 @import "./components/arc/foundation.css";
 
-:root { --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+:root { --font-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif; --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }

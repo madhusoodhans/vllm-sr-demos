@@ -71,6 +71,14 @@ const FLOW = [
   { icon: Layers, title: "System Two, when needed", text: "Only what passed reaches an LLM" },
 ];
 
+/** "How it works": the System Duo summary as feature cards, in the order a request meets them. */
+const FEATURES = [
+  { icon: Brain, title: "System One decides", text: "D3 and Vela answer typed questions about each request as probabilities, from one forward pass and no generated text." },
+  { icon: SlidersHorizontal, title: "Your code sets the rules", text: "Thresholds in your code pick the path, so bad inputs and attacks stop early, before any LLM sees them." },
+  { icon: Route, title: "System Two answers", text: "Only what passed reaches an LLM, and the Semantic Router picks the model and the effort it needs." },
+  { icon: KeyRound, title: "One free key", text: "One key from app.vllm-sr.ai works for System One and System Two, free for research and evaluation." },
+];
+
 /** The dialog shown when "Open demo" is held back. */
 function problemDialog(p: KeyProblem): { title: string; text: string } {
   if (p.code === "missing") return { title: "Add your API key first", text: "The demos run on the hosted System Duo APIs and need a key. Paste yours in the API key field, or get a free one." };
@@ -170,14 +178,58 @@ export function App() {
       </header>
 
       <main className={styles.main}>
+        {/* First screen: the title in System Duo's serif (fast in red, slow in blue, as on app.vllm-sr.ai), one line, the key. */}
         <section className={styles.hero} aria-labelledby="title">
-          <h1 id="title">System One decides. System Two answers.</h1>
-          <p className={styles.lead}>
-            System Duo, by vLLM Semantic Router, pairs a fast system with a slow one on one free key. System One, the
-            decision models D3 and Vela, answers typed questions about each request as probabilities, from one forward pass
-            and no generated text. Your code sets the thresholds, so bad inputs and attacks stop early. System Two gets only
-            what passed: the router picks the model and the effort it needs.
-          </p>
+          <h1 id="title" className={styles.title}>
+            System One <em className={styles.fast}>decides</em>.<br />System Two <em className={styles.slow}>answers</em>.
+          </h1>
+          <p className={styles.lead}>Two live demos of System Duo by vLLM Semantic Router. Paste your free key and open one.</p>
+
+          {/* API KEY: checked here (format) and through a demo backend (live), kept for this tab, handed to a demo in the URL fragment. */}
+          <section className={styles.keySection} aria-label="API key">
+            <form className={styles.key} onSubmit={(e) => { e.preventDefault(); void runCheck(); }}>
+              <div className={styles.keyField}>
+                <PasswordField ref={keyInput} label="Your API key" name="api-key" placeholder="Paste a System Duo API key" autoComplete="off" spellCheck={false}
+                  value={apiKey} aria-invalid={status.state === "problem" ? true : undefined} aria-describedby="key-status"
+                  onChange={(e) => { pending.current?.abort(); pending.current = null; setApiKey(e.target.value); saveKey(e.target.value.trim()); setStatus({ state: "idle" }); setProblem(null); }}
+                  messages={{ showPassword: "Show key", hidePassword: "Hide key" }} />
+              </div>
+              <Button type="submit" variant="primary" loading={status.state === "checking"}>{status.state === "checking" ? "Checking" : "Check key"}</Button>
+              <a className={styles.keyLink} href={keyUrl} target="_blank" rel="noopener noreferrer">
+                <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />Get API key<ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" />
+              </a>
+            </form>
+            <div className={styles.keyFoot}>
+              <p id="key-status" className={styles.keyStatus} data-state={status.state} role="status" aria-live="polite">
+                {status.state === "ok" && <><CircleCheck size={16} strokeWidth={1.75} aria-hidden="true" />Key works for System One and System Two</>}
+                {status.state === "problem" && <><CircleAlert size={16} strokeWidth={1.75} aria-hidden="true" />{status.problem.message}</>}
+                {status.state === "checking" && "Checking your key with the hosted API"}
+                {status.state === "idle" && "The demos need a key. One free key works for System One and System Two. It stays in this tab only."}
+              </p>
+              {apiKey && <Button type="button" variant="ghost" size="sm" onClick={onForget}>Forget key</Button>}
+            </div>
+          </section>
+        </section>
+
+        <section className={styles.section} aria-labelledby="demos-title">
+          <div className={styles.sectionHead}>
+            <h2 id="demos-title">Live demos</h2>
+            <p className={styles.sub}>Each demo shows every decision as it happens, with the model, time and probabilities.</p>
+          </div>
+          <div className={styles.grid}>
+            {DEMOS.map((d) => {
+              const url = config?.urls[d.id];
+              return <DemoCard key={d.id} demo={d} href={url ? withTheme(url, theme) : null} image={config?.images[d.id] ?? ""} onOpen={onOpenDemo} />;
+            })}
+            {DEMOS.length % 3 !== 0 && <div className={cardStyles.soon}><Plus size={18} strokeWidth={1.75} aria-hidden="true" />More demos soon</div>}
+          </div>
+        </section>
+
+        <section className={styles.section} aria-labelledby="how-title">
+          <div className={styles.sectionHead}>
+            <h2 id="how-title">How System Duo works</h2>
+            <p className={styles.sub}>A fast system and a slow one, on one free key. Each request meets them in this order.</p>
+          </div>
           <div className={styles.flow}>
             <ol className={styles.flowList} aria-label="How a request flows">
             {FLOW.map(({ icon: Icon, title, text }, i) => (
@@ -194,45 +246,15 @@ export function App() {
             ))}
             </ol>
           </div>
-        </section>
-
-        {/* API KEY: checked here (format) and through a demo backend (live), kept for this tab, handed to a demo in the URL fragment. */}
-        <section className={styles.keySection} aria-label="API key">
-          <form className={styles.key} onSubmit={(e) => { e.preventDefault(); void runCheck(); }}>
-            <div className={styles.keyField}>
-              <PasswordField ref={keyInput} label="Your API key" name="api-key" placeholder="Paste a System Duo API key" autoComplete="off" spellCheck={false}
-                value={apiKey} aria-invalid={status.state === "problem" ? true : undefined} aria-describedby="key-status"
-                onChange={(e) => { pending.current?.abort(); pending.current = null; setApiKey(e.target.value); saveKey(e.target.value.trim()); setStatus({ state: "idle" }); setProblem(null); }}
-                messages={{ showPassword: "Show key", hidePassword: "Hide key" }} />
-            </div>
-            <Button type="submit" variant="primary" loading={status.state === "checking"}>{status.state === "checking" ? "Checking" : "Check key"}</Button>
-            <a className={styles.keyLink} href={keyUrl} target="_blank" rel="noopener noreferrer">
-              <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />Get API key<ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" />
-            </a>
-          </form>
-          <div className={styles.keyFoot}>
-            <p id="key-status" className={styles.keyStatus} data-state={status.state} role="status" aria-live="polite">
-              {status.state === "ok" && <><CircleCheck size={16} strokeWidth={1.75} aria-hidden="true" />Key works for System One and System Two</>}
-              {status.state === "problem" && <><CircleAlert size={16} strokeWidth={1.75} aria-hidden="true" />{status.problem.message}</>}
-              {status.state === "checking" && "Checking your key with the hosted API"}
-              {status.state === "idle" && "The demos need a key. One free key works for System One and System Two. It stays in this tab only."}
-            </p>
-            {apiKey && <Button type="button" variant="ghost" size="sm" onClick={onForget}>Forget key</Button>}
-          </div>
-        </section>
-
-        <section className={styles.section} aria-labelledby="demos-title">
-          <div className={styles.sectionHead}>
-            <h2 id="demos-title">Live demos</h2>
-            <p className={styles.sub}>Each demo shows every decision as it happens, with the model, time and probabilities.</p>
-          </div>
-          <div className={styles.grid}>
-            {DEMOS.map((d) => {
-              const url = config?.urls[d.id];
-              return <DemoCard key={d.id} demo={d} href={url ? withTheme(url, theme) : null} image={config?.images[d.id] ?? ""} onOpen={onOpenDemo} />;
-            })}
-            {DEMOS.length % 3 !== 0 && <div className={cardStyles.soon}><Plus size={18} strokeWidth={1.75} aria-hidden="true" />More demos soon</div>}
-          </div>
+          <ul className={styles.features}>
+            {FEATURES.map(({ icon: Icon, title, text }) => (
+              <li key={title} className={styles.feature}>
+                <span className={styles.tileIcon}><Icon size={18} strokeWidth={1.75} aria-hidden="true" /></span>
+                <h3 className={styles.featureTitle}>{title}</h3>
+                <p className={styles.tileText}>{text}</p>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section className={styles.section} aria-labelledby="explore-title">
