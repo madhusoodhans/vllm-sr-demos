@@ -1,4 +1,4 @@
-/* Page: bar, title with the API key, demo cards, how it works (flow and features), explore tiles, footer. The page scrolls normally. */
+/* Page: bar, first screen (title, API key, scroll cue), how it works (flow and features), demo cards, explore tiles, footer. The page scrolls normally. */
 .shell { display: grid; grid-template-rows: auto 1fr auto; min-height: 100dvh; overflow-x: clip; }
 /* First screen only: a soft tint behind the summary that fades into the plain page background by the end of the first
  * viewport, so the sections below stay plain. Built from --accent, so it follows light and dark themes. */
@@ -39,7 +39,12 @@
 /* First screen: the title in System Duo's serif (Cormorant Garamond, as on app.vllm-sr.ai) with "decides" in its fast red
  * and "answers" in its slow blue, one line, then the API key. It fills most of the first viewport, so the demos come on
  * the first scroll. */
-.hero { display: grid; justify-items: center; align-content: center; gap: var(--space-6); min-height: min(calc(100dvh - 56px), 820px); padding: var(--space-12) 0; text-align: center; }
+.hero { position: relative; display: grid; justify-items: center; align-content: center; gap: var(--space-6); min-height: calc(100dvh - 56px); padding: var(--space-12) 0 var(--space-20); text-align: center; }
+/* A down arrow at the foot of the first screen: the page goes on below. It nudges down now and then; still with reduced motion. */
+.scrollCue { position: absolute; bottom: var(--space-6); left: 50%; display: grid; place-items: center; width: 44px; height: 44px; margin-left: -22px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); color: var(--text-secondary); text-decoration: none; transition: color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard); }
+@media (hover: hover) and (pointer: fine) { .scrollCue:hover { color: var(--foreground); border-color: var(--border-strong); } }
+@media (prefers-reduced-motion: no-preference) { .scrollCue svg { animation: nudge 2.4s var(--ease-in-out) infinite; } }
+@keyframes nudge { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(4px); } }
 .title { --fast: oklch(48% .16 35); --slow: oklch(43% .12 265);
   max-width: 980px; font-family: var(--font-serif); font-size: clamp(48px, 8.4vw, 112px); font-weight: 500; line-height: .98; letter-spacing: -.025em; text-wrap: balance; }
 .fast, .slow { font-style: italic; }
@@ -48,7 +53,7 @@
 :root[data-theme="dark"] .title { --fast: oklch(72% .15 38); --slow: oklch(76% .1 265); }
 .lead { max-width: 620px; color: var(--text-secondary); font-size: var(--text-lg); text-wrap: pretty; }
 .hero .keySection { margin-top: var(--space-4); text-align: initial; }
-@media (max-width: 640px) { .hero { min-height: 0; padding: var(--space-12) 0 var(--space-4); } .lead { font-size: var(--text-base); } }
+@media (max-width: 640px) { .hero { min-height: 0; padding: var(--space-12) 0 var(--space-4); } .scrollCue { display: none; } .lead { font-size: var(--text-base); } }
 
 /* Flow: five steps on one line. Between each pair, three fixed chevrons light in turn, left to right, so the row reads
  * as a current flowing through it. Nothing moves; with reduced motion they stay lit at a steady level. */

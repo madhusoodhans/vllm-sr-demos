@@ -2,7 +2,7 @@
  * that a demo needs before it opens (see apiKey.ts), one card per demo from demos.ts, and tiles to explore further.
  * Facts here are checked against the System Duo docs (app.vllm-sr.ai/docs) and the vllm-sr Hugging Face model cards. */
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
-import { ArrowUpRight, BookOpen, Brain, ChevronRight, CircleAlert, CircleCheck, FlaskConical, Sailboat, Scan, ShieldCheck, Sparkles, Plus, KeyRound, Layers, MessageSquareText, Route, SlidersHorizontal } from "lucide-react";
+import { ArrowUpRight, BookOpen, Brain, ChevronDown, ChevronRight, CircleAlert, CircleCheck, FlaskConical, Sailboat, Scan, ShieldCheck, Sparkles, Plus, KeyRound, Layers, MessageSquareText, Route, SlidersHorizontal } from "lucide-react";
 import { ThemeSwitch, type Theme } from "./components/arc/theme-switch/theme-switch";
 import { PasswordField } from "./components/arc/password-field/password-field";
 import { Dialog, DialogClose, DialogContent } from "./components/arc/dialog/dialog";
@@ -209,26 +209,15 @@ export function App() {
               {apiKey && <Button type="button" variant="ghost" size="sm" onClick={onForget}>Forget key</Button>}
             </div>
           </section>
+          <a className={styles.scrollCue} href="#how" aria-label="Scroll to How System Duo works">
+            <ChevronDown size={22} strokeWidth={1.75} aria-hidden="true" />
+          </a>
         </section>
 
-        <section className={styles.section} aria-labelledby="demos-title">
-          <div className={styles.sectionHead}>
-            <h2 id="demos-title">Live demos</h2>
-            <p className={styles.sub}>Each demo shows every decision as it happens, with the model, time and probabilities.</p>
-          </div>
-          <div className={styles.grid}>
-            {DEMOS.map((d) => {
-              const url = config?.urls[d.id];
-              return <DemoCard key={d.id} demo={d} href={url ? withTheme(url, theme) : null} image={config?.images[d.id] ?? ""} onOpen={onOpenDemo} />;
-            })}
-            {DEMOS.length % 3 !== 0 && <div className={cardStyles.soon}><Plus size={18} strokeWidth={1.75} aria-hidden="true" />More demos soon</div>}
-          </div>
-        </section>
-
-        <section className={styles.section} aria-labelledby="how-title">
+        <section className={styles.section} id="how" aria-labelledby="how-title">
           <div className={styles.sectionHead}>
             <h2 id="how-title">How System Duo works</h2>
-            <p className={styles.sub}>A fast system and a slow one, on one free key. Each request meets them in this order.</p>
+            <p className={styles.sub}>A fast system and a slow one, on one free key. Each request meets them in this order, and the demos below show it live.</p>
           </div>
           <div className={styles.flow}>
             <ol className={styles.flowList} aria-label="How a request flows">
@@ -255,6 +244,20 @@ export function App() {
               </li>
             ))}
           </ul>
+        </section>
+
+        <section className={styles.section} aria-labelledby="demos-title">
+          <div className={styles.sectionHead}>
+            <h2 id="demos-title">Live demos</h2>
+            <p className={styles.sub}>Each demo shows every decision as it happens, with the model, time and probabilities.</p>
+          </div>
+          <div className={styles.grid}>
+            {DEMOS.map((d) => {
+              const url = config?.urls[d.id];
+              return <DemoCard key={d.id} demo={d} href={url ? withTheme(url, theme) : null} image={config?.images[d.id] ?? ""} onOpen={onOpenDemo} />;
+            })}
+            {DEMOS.length % 3 !== 0 && <div className={cardStyles.soon}><Plus size={18} strokeWidth={1.75} aria-hidden="true" />More demos soon</div>}
+          </div>
         </section>
 
         <section className={styles.section} aria-labelledby="explore-title">
